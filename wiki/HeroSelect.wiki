@@ -1,5 +1,1 @@
-#summary One-sentence summary of this page.
-
-= HeroSelect =
-
 You can find more information about original HeroSelect [http://marvelmods.com/forum/index.php?topic=732.0 here]
