@@ -1,2 +1,1 @@
-= History =
 ||31.08.2008||First version||
