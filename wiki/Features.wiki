@@ -1,1 +1,5 @@
 Under Construction
+
+== Planned Features ==
+  * Random (do you guys want it?)
+  * Import/Export Selection
