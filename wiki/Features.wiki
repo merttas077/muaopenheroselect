@@ -5,5 +5,5 @@
   * You can change [http://code.google.com/p/muaopenheroselect/source/checkout the code] =)
 
 == Planned Features ==
-  * Random (do you guys want it?)
+  * Random (do you guys really want it?)
   * Import/Export Selection
