@@ -1,4 +1,8 @@
-Under Construction
+  * Capability to config all using config files;
+  * Create groups based on folder structure;
+  * Just "replace" a character;
+  * See better log messages;
+  * You can change [http://code.google.com/p/muaopenheroselect/source/checkout the code] =)
 
 == Planned Features ==
   * Random (do you guys want it?)
