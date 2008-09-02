@@ -4,6 +4,10 @@
   * See better log messages;
   * You can change [http://code.google.com/p/muaopenheroselect/source/checkout the code] =)
 
-== Planned Features ==
+=== User Suggestions===
+||*Suggestion*||*Suggested by*||
+||Index save games + roosters||[http://marvelmods.com/forum/index.php?action=profile;u=511 Sasquatch]||
+||Allows users to change their items based on their roster (by modifying items.engb)||[http://marvelmods.com/forum/index.php?action=profile;u=310 Norrin Radd]||
+=== Planned Features ===
   * Random (do you guys really want it?)
   * Import/Export Selection
