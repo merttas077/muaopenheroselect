@@ -6,9 +6,9 @@
 
 === User Suggestions===
 
-|| *Suggestion* || *Suggested by* ||
-||Index save games + roosters|| [http://marvelmods.com/forum/index.php?action=profile;u=511 Sasquatch]||
-||Allows users to change their items based on their roster (by modifying items.engb)||[http://marvelmods.com/forum/index.php?action=profile;u=310 Norrin Radd]||
+|| *Suggestion* || *Suggested by* || *Status* ||
+||Index save games + roosters|| [http://marvelmods.com/forum/index.php?action=profile;u=511 Sasquatch]||In Progress||
+||Allows users to change their items based on their roster (by modifying items.engb)||[http://marvelmods.com/forum/index.php?action=profile;u=310 Norrin Radd]|| Investigating ||
 
 === Planned Features ===
   * Random (do you guys really want it?)
