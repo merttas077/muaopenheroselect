@@ -3,6 +3,7 @@
   * Just "replace" a character;
   * See better log messages;
   * You can change [http://code.google.com/p/muaopenheroselect/source/checkout the code] =)
+  * Import/Export Selection
 
 === User Suggestions===
 
@@ -12,4 +13,3 @@
 
 === Planned Features ===
   * Random (do you guys really want it?)
-  * Import/Export Selection
