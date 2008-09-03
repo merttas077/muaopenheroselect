@@ -70,15 +70,8 @@ namespace WFA_MUA
         {
             trvAvailableChars.Nodes.Clear();
             DirectoryInfo folder = new DirectoryInfo(ini.IniReadValue("mua","chars"));
-            if (folder.Exists)
-            {
-                populateAvailable(folder, trvAvailableChars.Nodes);
-                trvAvailableChars.Sort();
-            }
-            else 
-            {
-                log("ERROR: folder not found: " + folder.FullName );
-            }
+            populateAvailable(folder, trvAvailableChars.Nodes);
+            trvAvailableChars.Sort();
         }
         /// <summary>
         /// 
@@ -202,17 +195,14 @@ namespace WFA_MUA
             lvi.SubItems.Add(name);
             lvi.SubItems.Add(path);
             lstSelected.Items.Add(lvi);
-
-            lvwColumnSorter.Order = SortOrder.Descending;
-            lstSelected_ColumnClick(this,new ColumnClickEventArgs(0));
+            lstSelected.Sort();
 
             //log(path + " loaded");
         }
 
         private void lstSelected_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (lstSelected.SelectedItems.Count>0)
-                txtPosition.Text = lstSelected.SelectedItems[0].Text;
+            txtPosition.Text = lstSelected.SelectedItems[0].Text;
         }
         /// <summary>
         /// Remove a selected char from the list
@@ -237,7 +227,6 @@ namespace WFA_MUA
                     objMenu.setTextbox(Int32.Parse(lvi.SubItems[0].Text), "");
                     lstSelected.Items.Remove(lvi);
                 }
-                txtPosition.Text = "";
             }
         }
         /// <summary>
@@ -250,26 +239,7 @@ namespace WFA_MUA
             if (lstSelected.Items.Count > 0)
             {
                 generateTextFile();
-                runDosCommnand(Directory.GetCurrentDirectory() + "/sys/xmlb-compile.exe", "-s " + tmpFile + " tmp/herostat.engb");
-                if (new FileInfo("tmp/Herostat.engb").Exists)
-                {
-                    string mua = ini.IniReadValue("mua", "path");
-                    if (new DirectoryInfo(mua).Exists)
-                    {
-                        FileInfo file = new FileInfo("tmp/herostat.engb");
-                        file.CopyTo(mua + "/data/herostat.engb", true);
-
-                        runDosCommnand(mua + "/MUA.exe", "");
-                    }
-                    else
-                    {
-                        log("ERROR: folder not found: " + mua);
-                    }
-                }
-                else
-                {
-                    log("INTERNAL ERROR: tmp/herostat.engb not found.");
-                }
+                runDosCommnand(Directory.GetCurrentDirectory() + "/sys/xmlb-compile.exe", "-s " + tmpFile + " tmp/hero.engb");
             }
             else
             {
@@ -350,24 +320,6 @@ namespace WFA_MUA
         private void btnReload_Click(object sender, EventArgs e)
         {
             populateAvailable();
-        }
-
-        private void trvAvailableChars_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-
-        }
-
-        private void btnRemoveAll_Click(object sender, EventArgs e)
-        {
-            foreach (ListViewItem lvi in lstSelected.Items) 
-            {
-                lstSelected.Items.Remove(lvi);
-            }
-        }
-
-        private void btnClean_Click(object sender, EventArgs e)
-        {
-            txtDebug.Text = "";
         }
     }
 }
