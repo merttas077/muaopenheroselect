@@ -95,13 +95,6 @@ namespace WFA_MUA
                 }
             }
         }
-        public void removeAll() 
-        {
-            foreach (TextboxChar txt in all)
-            {
-                txt.CharName = "";
-            }
-        }
 
     }
     public class TextboxChar : System.Windows.Forms.TextBox
