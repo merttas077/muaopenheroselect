@@ -1,2 +1,3 @@
+#labels Featured
 ||02.09.2009||Implemented import/export (beta 0.0.2)||
 ||31.08.2008||First version||
