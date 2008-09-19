@@ -10,22 +10,29 @@ namespace WFA_MUA
 {
     public partial class Main : Form
     {
-        private IniFile ini;
-        private string tmpFile = "tmp/test.txt";
+        private string EXE_PATH;
+        private IniFile iniCfg;
+        private string tmpFile;
+        private SaveSlots saveSlots;
         public Main()
         {
             InitializeComponent();
+            saveSlots = new SaveSlots();
+            mnuMenu.Items.Add(saveSlots);
+
+            EXE_PATH = System.IO.Directory.GetCurrentDirectory();
+            tmpFile = EXE_PATH + "/tmp/test.txt";
         }
         /// <summary>
         /// Load Ini File
         /// </summary>
         private void loadIni()
         {
-            string path = System.IO.Directory.GetCurrentDirectory() + "\\sys\\Config.ini";
+            string path = EXE_PATH + "\\sys\\Config.ini";
             FileInfo file = new FileInfo(path);
             if (file.Exists)
             {
-                ini = new IniFile(path);
+                iniCfg = new IniFile(path);
                 log("Ini file loaded!");
             }
             else 
@@ -38,28 +45,45 @@ namespace WFA_MUA
         {
             loadIni();
             populateAvailable();
-            loadDefaultChars();            
+            loadDefaultChars(iniCfg);            
         }
         /// <summary>
         /// Load the initial chars from INI file
         /// </summary>
-        private void loadDefaultChars()
+        private void loadDefaultChars(IniFile ini)
         {            
             string chars = ini.IniReadValue("mua", "chars");
+            //LOAD chars
             for (int i = 1; i <= 27; i++)
             {
                 if (i == 27) i = 96;
 
-                string path = chars + "\\" + ini.IniReadValue("defaultchars", i + "") + ".txt";
-                FileInfo file = new FileInfo(path);
-                if (file.Exists)
+                string path = ini.IniReadValue("defaultchars", i + "");
+                if (!path.Equals(""))
                 {
-                    string name = file.Name.Remove(file.Name.Length - 4);
-                    addSelectedChar(i, name, path);
+                    if (!chars.Equals("")) path = chars + "//" + path;
+                    if (!path.EndsWith(".txt")) path += ".txt";
+
+                    FileInfo file = new FileInfo(path);
+                    path = file.FullName;
+                    if (file.Exists)
+                    {
+                        string name = file.Name.Remove(file.Name.Length - 4);
+                        addSelectedChar(i, name, path);
+                    }
+                    else
+                    {
+                        log("ERROR: file not found: " + path);
+                    }
                 }
-                else 
-                {
-                    log("ERROR: file not found: " + path);
+            }
+            //load save slots
+            saveSlots.cleanAll();
+            for (int i = 1; i <= 20; i++) 
+            {
+                string slot = ini.IniReadValue("saves", "slot" + i);
+                if (slot.ToUpper().Equals("TRUE")) {
+                    saveSlots.setChecked(i);
                 }
             }
         }
@@ -69,9 +93,16 @@ namespace WFA_MUA
         private void populateAvailable()
         {
             trvAvailableChars.Nodes.Clear();
-            DirectoryInfo folder = new DirectoryInfo(ini.IniReadValue("mua","chars"));
-            populateAvailable(folder, trvAvailableChars.Nodes);
-            trvAvailableChars.Sort();
+            DirectoryInfo folder = new DirectoryInfo(iniCfg.IniReadValue("mua","chars"));
+            if (folder.Exists)
+            {
+                populateAvailable(folder, trvAvailableChars.Nodes);
+                trvAvailableChars.Sort();
+            }
+            else 
+            {
+                log("ERROR: folder not found: " + folder.FullName );
+            }
         }
         /// <summary>
         /// 
@@ -97,31 +128,6 @@ namespace WFA_MUA
             }
         }
 
-        /// <summary>
-        /// Run a MS Dos Command (used to compile/decompile MUA files)
-        /// </summary>
-        /// <seealso cref="http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=457996&SiteID=1"/>
-        /// <param name="cmd"></param>
-        /// <param name="vars"></param>
-        /// <returns></returns>
-        private string runDosCommnand(string cmd, string vars)
-        {
-            System.Diagnostics.ProcessStartInfo sinf = new System.Diagnostics.ProcessStartInfo(cmd, vars);
-            // The following commands are needed to redirect the standard output. This means that it will be redirected to the Process.StandardOutput StreamReader.
-            sinf.RedirectStandardOutput = true;
-            sinf.UseShellExecute = false;
-            // Do not create that ugly black window, please...
-            sinf.CreateNoWindow = true;
-            // Now we create a process, assign its ProcessStartInfo and start it
-            System.Diagnostics.Process p = new System.Diagnostics.Process();
-            p.StartInfo = sinf;
-            p.Start(); // well, we should check the return value here...
-            // We can now capture the output into a string...
-            string res = p.StandardOutput.ReadToEnd();
-            // And do whatever we want with that.
-            Console.WriteLine(res);
-            return res;
-        }
         /// <summary>
         /// Mark a char as selected
         /// </summary>
@@ -195,14 +201,17 @@ namespace WFA_MUA
             lvi.SubItems.Add(name);
             lvi.SubItems.Add(path);
             lstSelected.Items.Add(lvi);
-            lstSelected.Sort();
+
+            lvwColumnSorter.Order = SortOrder.Descending;
+            lstSelected_ColumnClick(this,new ColumnClickEventArgs(0));
 
             //log(path + " loaded");
         }
 
         private void lstSelected_SelectedIndexChanged(object sender, EventArgs e)
         {
-            txtPosition.Text = lstSelected.SelectedItems[0].Text;
+            if (lstSelected.SelectedItems.Count>0)
+                txtPosition.Text = lstSelected.SelectedItems[0].Text;
         }
         /// <summary>
         /// Remove a selected char from the list
@@ -227,6 +236,7 @@ namespace WFA_MUA
                     objMenu.setTextbox(Int32.Parse(lvi.SubItems[0].Text), "");
                     lstSelected.Items.Remove(lvi);
                 }
+                txtPosition.Text = "";
             }
         }
         /// <summary>
@@ -239,7 +249,44 @@ namespace WFA_MUA
             if (lstSelected.Items.Count > 0)
             {
                 generateTextFile();
-                runDosCommnand(Directory.GetCurrentDirectory() + "/sys/xmlb-compile.exe", "-s " + tmpFile + " tmp/hero.engb");
+
+                string aux = "-s \"" + tmpFile + "\" \"" + EXE_PATH + "/tmp/herostat.engb\"";
+                debug("Compiling: " + aux);
+                //compile the herostat.engb
+                Util.runDosCommnand(EXE_PATH + "/sys/xmlb-compile.exe", aux);
+                if (new FileInfo(EXE_PATH + "/tmp/Herostat.engb").Exists)
+                {
+                    string mua = iniCfg.IniReadValue("mua", "path");
+                    if (new DirectoryInfo(mua).Exists)
+                    {
+                        //Copy herostat to MUA dir
+                        FileInfo file = new FileInfo(EXE_PATH + "/tmp/herostat.engb");
+                        file.CopyTo(mua + "/data/herostat.engb", true);
+
+                        //Check saves
+                        if (saveSlots.SelectedItems.Count > 0)
+                        {
+                            setSaves(false);
+                        }
+
+                        //Run MUA
+                        Util.runDosCommnand(mua + "/MUA.exe", "");
+
+                        if (saveSlots.SelectedItems.Count>0)
+                        {
+                            MessageBox.Show("Press ok to restore saves (after close MUA.exe)","Waiting...");
+                            setSaves(true);
+                        }
+                    }
+                    else
+                    {
+                        log("ERROR: folder not found: " + mua);
+                    }
+                }
+                else
+                {
+                    log("INTERNAL ERROR: tmp/herostat.engb not found.");
+                }
             }
             else
             {
@@ -251,7 +298,7 @@ namespace WFA_MUA
         /// </summary>
         private void generateTextFile()
         {
-            DirectoryInfo folder = new DirectoryInfo("tmp");
+            DirectoryInfo folder = new DirectoryInfo(EXE_PATH + "/tmp");
             if (!folder.Exists)
                 folder.Create();
 
@@ -266,7 +313,7 @@ namespace WFA_MUA
                 writer.Write(readFile(path, pos));
                 writer.WriteLine("");
             }
-            writer.Write(readFile("sys/endoffile.txt", 0));
+            writer.Write(readFile(EXE_PATH + "/sys/endoffile.txt", 0));
             writer.WriteLine("}");
             writer.Close();
         }
@@ -304,6 +351,14 @@ namespace WFA_MUA
             txtDebug.Text= msg + "\r\n" + txtDebug.Text;
         }
         /// <summary>
+        /// Same as log
+        /// </summary>
+        /// <param name="msg"></param>
+        private void debug(string msg)
+        {
+            //txtDebug.Text = msg + "\r\n" + txtDebug.Text;
+        }
+        /// <summary>
         /// Observer. Update the position field
         /// </summary>
         /// <param name="name"></param>
@@ -320,6 +375,116 @@ namespace WFA_MUA
         private void btnReload_Click(object sender, EventArgs e)
         {
             populateAvailable();
+        }
+
+        private void trvAvailableChars_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+
+        }
+
+        private void btnRemoveAll_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem lvi in lstSelected.Items) 
+            {
+                lstSelected.Items.Remove(lvi);
+            }
+            for (int i = 1; i <= 27; i++)
+                objMenu.setTextbox(i, "");
+        }
+
+        private void btnClean_Click(object sender, EventArgs e)
+        {
+            txtDebug.Text = "";
+        }
+
+        private void mnuExit_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void mnuSave_Click(object sender, EventArgs e)
+        {
+            saveFileDialog.AddExtension = true;
+            saveFileDialog.DefaultExt = "ini";
+            saveFileDialog.Filter = "Ini File (*.ini)|*.ini";
+            DialogResult dialogResult = saveFileDialog.ShowDialog(this);
+            if (dialogResult.ToString().Equals("OK"))
+            {
+                FileInfo file = new FileInfo(saveFileDialog.FileName);
+                if (file.Exists)
+                    file.Delete();
+
+                IniFile ini = new IniFile(saveFileDialog.FileName);
+                ini.IniWriteValue("about", "site", "http://muaopenheroselect.googlecode.com");
+
+                //SAVE CHARS
+                foreach (ListViewItem lvi in lstSelected.Items)
+                {
+                    int pos = Int32.Parse(lvi.Text);
+                    string path = lvi.SubItems[2].Text;
+                    ini.IniWriteValue("defaultchars",pos + "",path);
+                }
+                //SAVE SLOTS
+                foreach (ToolStripMenuItem item in saveSlots.SelectedItems) 
+                {
+                    int pos = Int32.Parse(item.Name.Substring(7));
+                    ini.IniWriteValue("saves","slot" + pos,"true");
+                }
+            }
+        }
+
+        private void mnuLoad_Click(object sender, EventArgs e)
+        {
+            openFileDialog.AddExtension = true;
+            openFileDialog.DefaultExt = "ini";
+            openFileDialog.Filter = "Ini File (*.ini)|*.ini";
+            DialogResult dialogResult = openFileDialog.ShowDialog(this);
+            if (dialogResult.ToString().Equals("OK"))
+            {
+                btnRemoveAll_Click(sender, e);
+                IniFile ini = new IniFile(openFileDialog.FileName);
+                loadDefaultChars(ini);
+                log("INI loaded: " + openFileDialog.FileName);
+            }
+        }
+        private void setSaves(bool restore)
+        {
+            string SAVES_PATH = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + "/Activision/Marvel Ultimate Alliance/Save";
+            DirectoryInfo folder = new DirectoryInfo(SAVES_PATH);
+
+            if (!restore)
+            {
+                foreach (FileInfo file in folder.GetFiles("*.save"))
+                    file.MoveTo(file.FullName + ".bak");
+
+                foreach (ToolStripMenuItem item in saveSlots.SelectedItems)
+                {
+                    int pos = Int32.Parse(item.Name.Substring(7)) - 1;
+                    FileInfo file = new FileInfo(SAVES_PATH + "//saveslot" + pos + ".save.bak");
+                    if (file.Exists)
+                    {
+                        string newName = file.FullName.Substring(0, file.FullName.Length - 4);
+                        debug(newName);
+                        file.MoveTo(newName);
+                    }
+                }
+            }
+            else
+            {
+                foreach (FileInfo file in folder.GetFiles("*.save.bak"))
+                {
+                    string newName = file.FullName.Substring(0, file.FullName.Length - 4);
+                    file.MoveTo(newName);
+                }
+
+            }
+
+            
+        }
+        private void menuDefaultChars_Click(object sender, EventArgs e)
+        {
+            btnRemoveAll_Click(sender, e);
+            loadDefaultChars(iniCfg);
         }
     }
 }
