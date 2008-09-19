@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("WFA_MUA")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Dell Inc.")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("WFA_MUA")]
-[assembly: AssemblyCopyright("Copyright © Dell Inc. 2008")]
+[assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
