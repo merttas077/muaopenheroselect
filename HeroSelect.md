@@ -1,0 +1,1 @@
+You can find more information about original HeroSelect [here](http://marvelmods.com/forum/index.php?topic=732.0)
